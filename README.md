@@ -2,7 +2,9 @@
 
 Bots that play online cash bingo.
 
-> 🚫 **Disclaimer**: DO NOT TRY THIS, THESE GAMES ARE A TRAP, YOU CANNOT WIN!! This project is meant for educational
+> **Warning**
+> 
+> DO NOT TRY THIS, THESE GAMES ARE A TRAP, YOU CANNOT WIN!! This project is meant for educational
 > purposes only. Please don’t gamble. Even with a fancy bot, the odds are still worse than 50/50. Instead, dive into the
 > world of coding—it's much more rewarding. Still reading? Consider exploring more programming adventures or perhaps
 > even [buying my book](https://github.com/AdmTal/emoji-puzzles).
@@ -29,7 +31,7 @@ Currently, this project supports:
 
 - [Bingo King](https://apps.apple.com/us/app/bingo-king-win-real-money/id1539845099) - Promo code for some free playing
   cash: `DFEAiCJB`
-- [Bingo Cash](https://apps.apple.com/us/app/bingo-cash/id1522266397) - Promo code: `ZKGP34 `
+- [Bingo Cash](https://apps.apple.com/us/app/bingo-cash/id1522266397) - Promo code: `ZKGP34`
 
 **Note**: Using the promo codes helps both you and me! 🎉
 
@@ -58,8 +60,7 @@ cd /usr/local/lib/node_modules/appium-webdriveragent && \
 
 1. Clone this repository.
 2. Create a virtual environment: `python3 -m venv myenv`
-3. Activate the virtual environment: `source myenv/bin/activate` (on macOS/Linux) or `myenv\Scripts\activate` (on
-   Windows).
+3. Activate the virtual environment: `source myenv/bin/activate`
 4. Install the required Python packages: `pip install -r requirements.txt`
 
 ### Running the Bots:
@@ -73,10 +74,10 @@ python main.py <URL_FROM_WEBDRIVERAGENT>
 
 ## Technical Insights:
 
-- Tailored specifically for **iPad Pro 10.5**. You'd need to adjust hardcoded pixel coordinates for other devices.
+- Tailored specifically for **iPad Pro (10.5 in)**. You'd need to adjust hardcoded pixel coordinates for other devices.
 - The bots are built on the principle of capturing screenshots on the iPad and using OCR (Tesseract) to decipher
   numbers.
-- Speed can be enhanced by using `vmtouch` to preload the Tesseract binary—a potential time saver of about a quarter of
+- Speed can be enhanced by using `vmtouch` to preload the Tesseract binary — a potential time saver of about a quarter of
   a second per number read.
 - Everything ran smoothly on a MacBook Air.
 - Many clones of these bingo games exist. With slight adjustments, the logic used here might work on other similar
@@ -84,5 +85,5 @@ python main.py <URL_FROM_WEBDRIVERAGENT>
 
 ## Final Thoughts:
 
-Please remember, gambling is not a solution, and the odds are never truly in your favor. Dive deep into programming—it's
+Please remember, gambling is not a solution, and the odds are never truly in your favor. Dive deep into programming — it's
 both fun and enlightening! And as always, stay curious! 🚀
