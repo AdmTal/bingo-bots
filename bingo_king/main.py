@@ -24,7 +24,7 @@ from image_utils import (
 from utils.video_recorder import VideoRecorder
 
 # Change this to True to save gameplay videos
-_SAVE_VIDEO = True
+_SAVE_VIDEO = False
 
 BINGO_KING_BUNDLE_ID = 'com.bingo.king.game.ios'
 WDA_PORT = 8100
@@ -307,8 +307,8 @@ class GameState:
             return
 
         print_log(f'NUM = {current_number} - ✅')
-        self.tap_3x(is_bingo=False)
         self._daub_tracker[drow][dcol] = 1
+        self.tap_3x(is_bingo=self.check_bingo())
         tap_screen(URL, x, y, current_number)
         self._last_num = current_number
         self.perform_bingo()
@@ -354,7 +354,7 @@ class GameState:
         current_time = time.time()
         time_since_last_tap = current_time - self._last_tapped_time
 
-        if time_since_last_tap < 8:
+        if time_since_last_tap < 9:
             return
 
         available_3x = [self._p1, self._p2, self._p3].count(PW_3X)
@@ -399,51 +399,93 @@ class GameState:
             self._p3 = None
             return
 
-    def perform_crown_pw(self):
-        # Map of the powerups to their respective functions
+    def perform_crown_pw(self, current_number):
         powerup_functions = {
             1: tap_power_1,
             2: tap_power_2,
             3: tap_power_3
         }
 
-        # Initialize list of powerups
         powerups = [self._p1, self._p2, self._p3]
+        crowns_available = powerups.count(PW_CROWN)
 
-        # Count number of crowns available
-        tapped_spots = []
-        crowns_available = sum([p == PW_CROWN for p in powerups])
         if not crowns_available:
             return
 
-        # Iterate over potential bingo lines
-        for line in BINGO_LINES:
-            needed_spots = self.spots_needed_for_bingo(line)
+        if crowns_available < 3 and current_number and (
+                game_state.match(current_number) or current_number == self._last_num):
+            return
 
-            # If we have enough crowns to achieve bingo
-            if 0 < len(needed_spots) <= crowns_available:
-                # Use the crowns
-                for (mrow, mcol) in needed_spots:
-                    # Get the index of the next available crown powerup
-                    next_crown_idx = next((idx for idx, is_crown in enumerate(powerups) if is_crown == PW_CROWN), None)
+        most_needed = self.most_needed_spots()
 
-                    if next_crown_idx is not None:
-                        # Use the crown powerup function
-                        powerup_functions[next_crown_idx + 1](PW_CROWN)
+        # Use the crown immediately on the most needed spot
+        for (mrow, mcol) in most_needed:
+            # Get the index of the next available crown powerup
+            next_crown_idx = next((idx for idx, is_crown in enumerate(powerups) if is_crown == PW_CROWN), None)
 
-                        # Mark the crown as used by setting it to a placeholder (e.g. None)
-                        powerups[next_crown_idx] = None
+            if next_crown_idx is not None:
+                # Use the crown powerup function
+                powerup_functions[next_crown_idx + 1](PW_CROWN)
 
-                        # Log and tap the screen
-                        num = self._number_lookup[mcol][mrow]
-                        print_log(f'CROWN (BINGO) - Click spot = {num} -- ({mcol}, {mrow})')
-                        self.daub_number(num)
+                # Mark the crown as used by setting it to a placeholder (e.g. None)
+                powerups[next_crown_idx] = None
 
-                        # Decrease the count of crowns available
-                        crowns_available -= 1
+                # Log and tap the screen
+                num = self._number_lookup[mcol][mrow]
+                print_log(f'CROWN - Clicked spot = {num} -- ({mcol}, {mrow})')
+                self.daub_number(num)
 
-                # Exit the loop after using the crowns for a line
+                # Decrease the count of crowns available
+                crowns_available -= 1
+
+            if crowns_available == 0:
                 break
+
+    # def perform_crown_pw(self):
+    #     # Map of the powerups to their respective functions
+    #     powerup_functions = {
+    #         1: tap_power_1,
+    #         2: tap_power_2,
+    #         3: tap_power_3
+    #     }
+    #
+    #     # Initialize list of powerups
+    #     powerups = [self._p1, self._p2, self._p3]
+    #
+    #     # Count number of crowns available
+    #     tapped_spots = []
+    #     crowns_available = sum([p == PW_CROWN for p in powerups])
+    #     if not crowns_available:
+    #         return
+    #
+    #     # Iterate over potential bingo lines
+    #     for line in BINGO_LINES:
+    #         needed_spots = self.spots_needed_for_bingo(line)
+    #
+    #         # If we have enough crowns to achieve bingo
+    #         if 0 < len(needed_spots) <= crowns_available:
+    #             # Use the crowns
+    #             for (mrow, mcol) in needed_spots:
+    #                 # Get the index of the next available crown powerup
+    #                 next_crown_idx = next((idx for idx, is_crown in enumerate(powerups) if is_crown == PW_CROWN), None)
+    #
+    #                 if next_crown_idx is not None:
+    #                     # Use the crown powerup function
+    #                     powerup_functions[next_crown_idx + 1](PW_CROWN)
+    #
+    #                     # Mark the crown as used by setting it to a placeholder (e.g. None)
+    #                     powerups[next_crown_idx] = None
+    #
+    #                     # Log and tap the screen
+    #                     num = self._number_lookup[mcol][mrow]
+    #                     print_log(f'CROWN (BINGO) - Click spot = {num} -- ({mcol}, {mrow})')
+    #                     self.daub_number(num)
+    #
+    #                     # Decrease the count of crowns available
+    #                     crowns_available -= 1
+    #
+    #             # Exit the loop after using the crowns for a line
+    #             break
 
     def most_needed_spots(self):
         n = len(self._daub_tracker)
@@ -473,8 +515,7 @@ class GameState:
             tap_power_3(PW_STAR)
 
         most_needed = self.most_needed_spots()
-        lookup = reverse_lookup(number_coords)
-        most_needed_numbers = [lookup[col][row] for row, col in most_needed]
+        most_needed_numbers = [self._number_lookup[col][row] for row, col in most_needed]
 
         # Wait for bubbles to finish loading
         time.sleep(.3)
@@ -634,7 +675,7 @@ while True:
         game_state.daub_number(current_number)
 
         # Forth, use Crown power ups if they are available
-        game_state.perform_crown_pw()
+        game_state.perform_crown_pw(current_number)
 
         # Fifth, use Star power ups if they are available
         game_state.perform_star_pw(current_number)
